@@ -18,14 +18,14 @@ public class Worker : BackgroundService
         {
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-            // Console.WriteLine("Processing....");
-            // using (var progress = new ProgressBar()) {
-            //     for (var i = 0.0; i <= 100; i=i+0.02) {
-            //         progress.Report((double) i / 100);
-            //         Thread.Sleep(2);
-            //     }
-            // }
-            // Console.WriteLine("Done.");
+            Console.WriteLine("Processing....");
+            using (var progress = new ProgressBar()) {
+                for (var i = 0.0; i <= 100; i=i+0.02) {
+                    progress.Report((double) i / 100);
+                    Thread.Sleep(2);
+                }
+            }
+            Console.WriteLine("Done.");
 
             Random random = new Random();
             Console.WriteLine(new string('-', 72));

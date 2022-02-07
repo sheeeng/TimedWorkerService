@@ -16,7 +16,8 @@ public class Worker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.UtcNow.ToString("O"));
+            _logger.LogInformation("Worker running at: {time}", DateTime.UtcNow.ToString("O"));
 
             var sysFolder = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.System));
             FileInfo[] files = sysFolder.GetFiles(".DS_Store");
@@ -30,6 +31,7 @@ public class Worker : BackgroundService
             }
             Console.WriteLine("done.");
 
+            Console.WriteLine(new string('=', 80));
 
             Console.WriteLine("Processing....");
             using (var progress = new ProgressBar()) {

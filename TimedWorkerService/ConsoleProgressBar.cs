@@ -10,33 +10,33 @@ using System.Text;
 /// </summary>
 public class ConsoleProgressBar : IDisposable
 {
-     public float CurrentProgress => writer.CurrentProgress;
+     public float CurrentProgress => _writer.CurrentProgress;
 
-    private TextWriter OriginalWriter;
-    private ProgressWriter writer;
+    private readonly TextWriter _originalWriter;
+    private readonly ProgressWriter _writer;
 
     public ConsoleProgressBar() {
-        OriginalWriter = Console.Out;
-        writer = new ProgressWriter(OriginalWriter);
-        Console.SetOut(writer);
+        _originalWriter = Console.Out;
+        _writer = new ProgressWriter(_originalWriter);
+        Console.SetOut(_writer);
     }
 
     public void Dispose() {
-        Console.SetOut(OriginalWriter);
-        writer.ClearProgressBar();
+        Console.SetOut(_originalWriter);
+        _writer.ClearProgressBar();
     }
 
     public void SetProgress(float f) {
-        writer.CurrentProgress = f;
-        writer.RedrawProgress();
+        _writer.CurrentProgress = f;
+        _writer.RedrawProgress();
     }
     public void SetProgress(int i) {
         SetProgress((float)i);
     }
 
-    public void Increment(float f) {
-        writer.CurrentProgress += f;
-        writer.RedrawProgress();
+    private void Increment(float f) {
+        _writer.CurrentProgress += f;
+        _writer.RedrawProgress();
     }
 
     public void Increment(int i) {
@@ -47,7 +47,7 @@ public class ConsoleProgressBar : IDisposable
 
         public override Encoding Encoding => Encoding.UTF8;
         public float CurrentProgress {
-            get { return _currentProgress; }
+            get => _currentProgress;
             set {
                 _currentProgress = value;
                 if(_currentProgress > 100) {
@@ -59,77 +59,77 @@ public class ConsoleProgressBar : IDisposable
         }
 
         private float _currentProgress = 0;
-        private TextWriter consoleOut;
+        private readonly TextWriter _consoleOut;
         private const string ProgressTemplate = "[{0}] {1:n2}%";
-        private const int AllocatedTemplateSpace = 11;
-        private object SyncLock = new object();
-        public ProgressWriter(TextWriter _consoleOut) {
-            consoleOut = _consoleOut;
+        private const int AllocatedTemplateSpace = 70;
+        private readonly object _syncLock = new object();
+        public ProgressWriter(TextWriter consoleOut) {
+            this._consoleOut = consoleOut;
             RedrawProgress();
         }
 
         private void DrawProgressBar() {
-            lock (SyncLock) {
-                int avalibleSpace = Console.BufferWidth - AllocatedTemplateSpace;
-                int percentAmmount = (int)((float)avalibleSpace * (CurrentProgress / 100));
+            lock (_syncLock) {
+                int availableSpace = Console.BufferWidth - AllocatedTemplateSpace;
+                int percentAmount = (int)((float)availableSpace * (CurrentProgress / 100));
                 var col = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                string progressBar = string.Concat(new string('=', percentAmmount), new string(' ', avalibleSpace - percentAmmount));
-                consoleOut.Write(string.Format(ProgressTemplate, progressBar, CurrentProgress));
+                string progressBar = string.Concat(new string('=', percentAmount), new string(' ', availableSpace - percentAmount));
+                _consoleOut.Write(string.Format(ProgressTemplate, progressBar, CurrentProgress));
                 Console.ForegroundColor = col;
             }
         }
 
         public void RedrawProgress() {
-            lock (SyncLock) {
-                int LastLineWidth = Console.CursorLeft;
+            lock (_syncLock) {
+                int lastLineWidth = Console.CursorLeft;
                 var consoleH = Console.WindowTop + Console.WindowHeight - 1;
                 Console.SetCursorPosition(0, consoleH);
                 DrawProgressBar();
-                Console.SetCursorPosition(LastLineWidth, consoleH - 1);
+                Console.SetCursorPosition(lastLineWidth, consoleH - 1);
             }
         }
 
         private void ClearLineEnd() {
-            lock (SyncLock) {
+            lock (_syncLock) {
                 int lineEndClear = Console.BufferWidth - Console.CursorLeft - 1;
-                consoleOut.Write(new string(' ', lineEndClear));
+                _consoleOut.Write(new string(' ', lineEndClear));
             }
         }
 
         public void ClearProgressBar() {
-            lock (SyncLock) {
-                int LastLineWidth = Console.CursorLeft;
+            lock (_syncLock) {
+                int lastLineWidth = Console.CursorLeft;
                 var consoleH = Console.WindowTop + Console.WindowHeight - 1;
                 Console.SetCursorPosition(0, consoleH);
                 ClearLineEnd();
-                Console.SetCursorPosition(LastLineWidth, consoleH - 1);
+                Console.SetCursorPosition(lastLineWidth, consoleH - 1);
             }
         }
 
         public override void Write(char value) {
-            lock (SyncLock) {
-                consoleOut.Write(value);
+            lock (_syncLock) {
+                _consoleOut.Write(value);
             }
         }
 
-        public override void Write(string value) {
-            lock (SyncLock) {
-                consoleOut.Write(value);
+        public override void Write(string? value) {
+            lock (_syncLock) {
+                _consoleOut.Write(value);
             }
         }
 
-        public override void WriteLine(string value) {
-            lock (SyncLock) {
-                consoleOut.Write(value);
-                consoleOut.Write(Environment.NewLine);
+        public override void WriteLine(string? value) {
+            lock (_syncLock) {
+                _consoleOut.Write(value);
+                _consoleOut.Write(Environment.NewLine);
                 ClearLineEnd();
-                consoleOut.Write(Environment.NewLine);
+                _consoleOut.Write(Environment.NewLine);
                 RedrawProgress();
             }
         }
 
-        public override void WriteLine(string format, params object[] arg) {
+        public override void WriteLine(string format, params object?[] arg) {
             WriteLine(string.Format(format, arg));
         }
 

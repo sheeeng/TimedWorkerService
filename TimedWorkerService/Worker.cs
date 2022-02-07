@@ -18,6 +18,19 @@ public class Worker : BackgroundService
         {
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
+            var sysFolder = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.System));
+            FileInfo[] files = sysFolder.GetFiles(".DS_Store");
+
+            using (var progressBar = new ConsoleProgressBar()) {
+                for(int i = 0; i < files.Length; i++) {
+                    Thread.Sleep(50);
+                    Console.WriteLine(files[i].Name);
+                    progressBar.SetProgress((i / (float)files.Length) * 100);
+                }
+            }
+            Console.WriteLine("done.");
+
+
             Console.WriteLine("Processing....");
             using (var progress = new ProgressBar()) {
                 for (var i = 0.0; i <= 100; i=i+0.02) {
